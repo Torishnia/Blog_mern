@@ -6,6 +6,7 @@ import { validationResult } from 'express-validator';
 
 import { registerValidation } from './validations/auth.js';
 import UserModel from './models/User.js';
+import checkAuth from './utils/checkAuth.js';
 
 mongoose
   .connect('mongodb+srv://valeritorishnya:mern_stack@cluster0.vo0f4pl.mongodb.net/blog?retryWrites=true&w=majority')
@@ -99,6 +100,27 @@ app.post('/auth/register', registerValidation, async (req, res) => {
     })
   }
 });
+
+app.get('/auth/me', checkAuth, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'Користувач не знайден',
+      });
+    }
+
+    const { passwordHash, ...userData } = user._doc;
+
+    res.json(userData);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: 'Немає доступу',
+    })
+  }
+})
 
 app.listen(4444, (err) => {
   if (err) {
