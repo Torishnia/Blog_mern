@@ -24,6 +24,9 @@ export const getOne = async (req, res) => {
       });
     }
 
+    const postToUpdate = { viewsCount: post.viewsCount + 1 };
+    await PostModel.findByIdAndUpdate(postId, postToUpdate);
+
     return res.json(post);
   } catch (err) {
     console.log(err);
@@ -78,22 +81,39 @@ export const update = async (req, res) => {
   try {
     const postId = req.params.id;
 
-    await PostModel.updateOne(
-      {
-        _id: postId,
-      }, 
-      {
-        title: req.body.title,
-        text: req.body.text,
-        imageUrl: req.body.imageUrl,
-        tags: req.body.tags,
-        user: req.userId,
-      },
-    )
+    if (!postId) {
+      return res.status(404).json({
+        message: 'Стаття не знайдена',
+      });
+    }
 
-    return res.json({
-      success: true,
-    });
+    const post = {
+      title: req.body.title,
+      text: req.body.text,
+      imageUrl: req.body.imageUrl,
+      tags: req.body.tags,
+      user: req.userId,
+    };
+    const postUpdated = await PostModel.findByIdAndUpdate(postId, post, {new: true});
+
+    return res.json(postUpdated);
+
+    // await PostModel.updateOne(
+    //   {
+    //     _id: postId,
+    //   }, 
+    //   {
+    //     title: req.body.title,
+    //     text: req.body.text,
+    //     imageUrl: req.body.imageUrl,
+    //     tags: req.body.tags,
+    //     user: req.userId,
+    //   },
+    // )
+
+    // return res.json({
+    //   success: true,
+    // });
   } catch (err) {
     console.log(err);
     res.status(500).json({
