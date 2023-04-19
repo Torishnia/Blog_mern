@@ -3,28 +3,33 @@ import bcrypt from 'bcrypt';
 
 import UserModel from '../models/User.js';
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
-    const password = req.body.password;
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
+    const { email, fullName, avatarUrl, password } = req.body;
 
-    const doc = new UserModel({
-      email: req.body.email,
-      fullName: req.body.fullName,
-      passwordHash: hash,
-      avatarUrl: req.body.avatarUrl,
+    const isUserExist = await UserModel.findOne({ email });
+    if (isUserExist) {
+      res.status(200).json({ message: `User with '${email}' email already exist` });
+      return next();
+    }
+
+    
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(password, salt);
+
+    const dataForSave = new UserModel({
+      email,
+      fullName,
+      passwordHash: hashPassword,
+      avatarUrl,
     })
 
-    const user = await doc.save();
+    const user = await dataForSave.save();
 
-    const token = jwt.sign({
-      _id: user._id,
-    }, 
-    'secret123',
-    {
-      expiresIn: '30d',
-    }
+    const token = jwt.sign(
+      { _id: user._id }, 
+      'secret123',
+      { expiresIn: '30d' }
     );
 
     const { passwordHash, ...userData } = user._doc;
