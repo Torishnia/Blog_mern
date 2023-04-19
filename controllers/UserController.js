@@ -48,7 +48,8 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res) => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email });
+    const { email, password } = req.body;
+    const user = await UserModel.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
@@ -56,7 +57,7 @@ export const login = async (req, res) => {
       })
     }
 
-    const isValidPass = await bcrypt.compare(req.body.password, user._doc.passwordHash);
+    const isValidPass = await bcrypt.compare(password, user._doc.passwordHash);
 
     if (!isValidPass) {
       return res.status(400).json({
@@ -64,13 +65,10 @@ export const login = async (req, res) => {
       })
     }
 
-    const token = jwt.sign({
-      _id: user._id,
-    }, 
-    'secret123',
-    {
-      expiresIn: '30d',
-    }
+    const token = jwt.sign(
+      { _id: user._id }, 
+      'secret123',
+      { expiresIn: '30d' }
     );
 
     const { passwordHash, ...userData } = user._doc;
