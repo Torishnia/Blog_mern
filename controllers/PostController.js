@@ -34,7 +34,7 @@ export const getAll = async (req, res) => {
 export const getOne = async (req, res) => {
   try {
     const postId = req.params.id;
-    const post = await PostModel.findById(postId);
+    const post = await PostModel.findById(postId).populate('user');
 
     if (!post) {
       return res.status(404).json({
